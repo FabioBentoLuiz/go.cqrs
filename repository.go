@@ -6,10 +6,15 @@
 package ycq
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"net/url"
 
-	"github.com/jetbasrawi/go.geteventstore"
+	esDb "github.com/EventStore/EventStore-Client-Go/client"
+	"github.com/EventStore/EventStore-Client-Go/direction"
+	"github.com/EventStore/EventStore-Client-Go/messages"
+	"github.com/EventStore/EventStore-Client-Go/streamrevision"
+	"github.com/gofrs/uuid"
 )
 
 // DomainRepository is the interface that all domain repositories should implement.
@@ -24,7 +29,7 @@ type DomainRepository interface {
 // GetEventStoreCommonDomainRepo is an implementation of the DomainRepository
 // that uses GetEventStore for persistence
 type GetEventStoreCommonDomainRepo struct {
-	eventStore         *goes.Client
+	eventStore         *esDb.Client
 	eventBus           EventBus
 	streamNameDelegate StreamNamer
 	aggregateFactory   AggregateFactory
@@ -32,7 +37,7 @@ type GetEventStoreCommonDomainRepo struct {
 }
 
 // NewCommonDomainRepository constructs a new CommonDomainRepository
-func NewCommonDomainRepository(eventStore *goes.Client, eventBus EventBus) (*GetEventStoreCommonDomainRepo, error) {
+func NewCommonDomainRepository(eventStore *esDb.Client, eventBus EventBus) (*GetEventStoreCommonDomainRepo, error) {
 	if eventStore == nil {
 		return nil, fmt.Errorf("Nil Eventstore injected into repository.")
 	}
@@ -100,35 +105,13 @@ func (r *GetEventStoreCommonDomainRepo) Load(aggregateType, id string) (Aggregat
 		return nil, err
 	}
 
-	stream := r.eventStore.NewStreamReader(streamName)
-	for stream.Next() {
-		switch err := stream.Err().(type) {
-		case nil:
-			break
-		case *url.Error, *goes.ErrTemporarilyUnavailable:
-			return nil, &ErrRepositoryUnavailable{}
-		case *goes.ErrNoMoreEvents:
-			return aggregate, nil
-		case *goes.ErrUnauthorized:
-			return nil, &ErrUnauthorized{}
-		case *goes.ErrNotFound:
-			return nil, &ErrAggregateNotFound{AggregateType: aggregateType, AggregateID: id}
-		default:
-			return nil, &ErrUnexpected{Err: err}
-		}
+	events, err := r.eventStore.ReadStreamEvents(context.Background(), direction.Forwards, streamName, streamrevision.StreamRevisionStart, 1, false)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read events from stream %s", streamName)
+	}
 
-		event := r.eventFactory.GetEvent(stream.EventResponse().Event.EventType)
-
-		//TODO: No test for meta
-		meta := make(map[string]string)
-		stream.Scan(event, &meta)
-		if stream.Err() != nil {
-			return nil, stream.Err()
-		}
-		em := NewEventMessage(id, event, Int(stream.EventResponse().Event.EventNumber))
-		for k, v := range meta {
-			em.SetHeader(k, v)
-		}
+	for _, event := range events {
+		em := NewEventMessage(id, event, &event.EventNumber)
 		aggregate.Apply(em, false)
 		aggregate.IncrementVersion()
 	}
@@ -138,7 +121,7 @@ func (r *GetEventStoreCommonDomainRepo) Load(aggregateType, id string) (Aggregat
 }
 
 // Save persists an aggregate
-func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVersion *int) error {
+func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVersion *uint64) error {
 
 	if r.streamNameDelegate == nil {
 		return fmt.Errorf("The common domain repository has no stream name delagate.")
@@ -153,27 +136,35 @@ func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVe
 
 	if len(resultEvents) > 0 {
 
-		evs := make([]*goes.Event, len(resultEvents))
+		events := make([]messages.ProposedEvent, len(resultEvents))
 
 		for k, v := range resultEvents {
 			//TODO: There is no test for this code
 			v.SetHeader("AggregateID", aggregate.AggregateID())
-			evs[k] = goes.NewEvent("", v.EventType(), v.Event(), v.GetHeaders())
+			//evs[k] = goes.NewEvent("", v.EventType(), v.Event(), v.GetHeaders())
+			eventID, err := uuid.NewV4()
+			if err != nil {
+				return fmt.Errorf("Could not generate UUID")
+			}
+
+			json, err := json.Marshal(v.Event())
+			if err != nil {
+				return fmt.Errorf("Error parsing %v", v.Event())
+			}
+
+			events[k] = messages.ProposedEvent{
+				EventID:      eventID,
+				EventType:    v.EventType(),
+				ContentType:  "application/json",
+				UserMetadata: nil,
+				Data:         json,
+			}
 		}
 
-		streamWriter := r.eventStore.NewStreamWriter(streamName)
-		err := streamWriter.Append(expectedVersion, evs...)
-		switch e := err.(type) {
-		case nil:
-			break
-		case *goes.ErrConcurrencyViolation:
-			return &ErrConcurrencyViolation{Aggregate: aggregate, ExpectedVersion: expectedVersion, StreamName: streamName}
-		case *goes.ErrUnauthorized:
-			return &ErrUnauthorized{}
-		case *goes.ErrTemporarilyUnavailable:
-			return &ErrRepositoryUnavailable{}
-		default:
-			return &ErrUnexpected{Err: e}
+		_, err := r.eventStore.AppendToStream(context.Background(), streamName, streamrevision.StreamRevisionAny, events)
+
+		if err != nil {
+			return fmt.Errorf("Unexpected failure appending to stream %s. Error: %+v", streamName, err)
 		}
 	}
 
@@ -183,7 +174,8 @@ func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVe
 		if expectedVersion == nil {
 			r.eventBus.PublishEvent(v)
 		} else {
-			em := NewEventMessage(v.AggregateID(), v.Event(), Int(*expectedVersion+k+1))
+			ver := uint64(*expectedVersion + uint64(k) + 1)
+			em := NewEventMessage(v.AggregateID(), v.Event(), &ver)
 			r.eventBus.PublishEvent(em)
 		}
 	}

@@ -17,7 +17,7 @@ package ycq
 import (
 	"reflect"
 
-	"github.com/jetbasrawi/go.cqrs/internal/uuid"
+	"github.com/gofrs/uuid"
 )
 
 // typeOf is a convenience function that returns the name of a type
@@ -31,7 +31,11 @@ func typeOf(i interface{}) string {
 
 // NewUUID returns a new v4 uuid as a string
 func NewUUID() string {
-	return uuid.NewUUID()
+	uuid, error := uuid.NewV4()
+	if error != nil {
+		panic("Could not generate UUID")
+	}
+	return uuid.String()
 }
 
 // Int returns a pointer to int.
@@ -40,6 +44,6 @@ func NewUUID() string {
 // is required such as expectedVersion argument on the repository
 // and this helper function makes keeps the code cleaner in these
 // cases.
-func Int(i int) *int {
+func Uint64(i uint64) *uint64 {
 	return &i
 }

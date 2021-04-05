@@ -55,9 +55,10 @@ func (s *EventSuite) TestShouldGetTypeOfEvent(c *C) {
 
 func (s *EventSuite) TestShouldGetEventVersion(c *C) {
 	ev := &SomeEvent{"Some data", 456}
-	em := NewEventMessage(NewUUID(), ev, Int(5))
+	evtNum := uint64(5)
+	em := NewEventMessage(NewUUID(), ev, &evtNum)
 
-	c.Assert(*em.Version(), Equals, 5)
+	c.Assert(*em.Version(), Equals, uint64(5))
 }
 
 func (s *EventSuite) TestShouldGetHeaders(c *C) {

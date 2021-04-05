@@ -27,7 +27,7 @@ type EventMessage interface {
 	EventType() string
 
 	// Version returns the version of the event
-	Version() *int
+	Version() *uint64
 }
 
 // EventDescriptor is an implementation of the event message interface.
@@ -35,11 +35,11 @@ type EventDescriptor struct {
 	id      string
 	event   interface{}
 	headers map[string]interface{}
-	version *int
+	version *uint64
 }
 
 // NewEventMessage returns a new event descriptor
-func NewEventMessage(aggregateID string, event interface{}, version *int) *EventDescriptor {
+func NewEventMessage(aggregateID string, event interface{}, version *uint64) *EventDescriptor {
 	return &EventDescriptor{
 		id:      aggregateID,
 		event:   event,
@@ -74,6 +74,6 @@ func (c *EventDescriptor) Event() interface{} {
 }
 
 // Version returns the version of the event
-func (c *EventDescriptor) Version() *int {
+func (c *EventDescriptor) Version() *uint64 {
 	return c.version
 }
