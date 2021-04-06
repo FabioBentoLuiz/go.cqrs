@@ -23,7 +23,7 @@ type DomainRepository interface {
 	Load(aggregateTypeName string, aggregateID string) (AggregateRoot, error)
 
 	//Saves the aggregate.
-	Save(aggregate AggregateRoot, expectedVersion *int) error
+	Save(aggregate AggregateRoot, expectedVersion *uint64) error
 }
 
 // GetEventStoreCommonDomainRepo is an implementation of the DomainRepository
