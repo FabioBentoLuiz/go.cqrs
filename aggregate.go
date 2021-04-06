@@ -3,13 +3,13 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-package ycq
+package eventsourcing
 
 //AggregateRoot is the interface that all aggregates should implement
 type AggregateRoot interface {
 	AggregateID() string
-	OriginalVersion() int
-	CurrentVersion() int
+	OriginalVersion() int64
+	CurrentVersion() int64
 	IncrementVersion()
 	Apply(events EventMessage, isNew bool)
 	TrackChange(EventMessage)
@@ -25,7 +25,7 @@ type AggregateRoot interface {
 // method that will contain behaviour specific to your aggregate.
 type AggregateBase struct {
 	id      string
-	version int
+	version int64
 	changes []EventMessage
 }
 
@@ -49,7 +49,7 @@ func (a *AggregateBase) AggregateID() string {
 // Importantly an aggregate with one event applied will be at version 0
 // this allows the aggregates to match the version in the eventstore where
 // the first event will be version 0.
-func (a *AggregateBase) OriginalVersion() int {
+func (a *AggregateBase) OriginalVersion() int64 {
 	return a.version
 }
 
@@ -59,8 +59,8 @@ func (a *AggregateBase) OriginalVersion() int {
 // Importantly an aggregate with one event applied will be at version 0
 // this allows the aggregates to match the version in the eventstore where
 // the first event will be version 0.
-func (a *AggregateBase) CurrentVersion() int {
-	return a.version + len(a.changes)
+func (a *AggregateBase) CurrentVersion() int64 {
+	return a.version + int64(len(a.changes))
 }
 
 // IncrementVersion increments the aggregate version number by one.

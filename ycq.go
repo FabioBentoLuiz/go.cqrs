@@ -3,7 +3,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-// Package ycq provides a CQRS reference implementation.
+// package eventsourcing provides a CQRS reference implementation.
 //
 // The implementation follows as much as possible the classic reference implementation
 // m-r by Greg Young.
@@ -12,7 +12,7 @@
 // in C# and uses Generics where generics are not available in Go.
 // This implementation instead uses interfaces to deal with types in a generic manner
 // and used delegate functions to instantiate specific types.
-package ycq
+package eventsourcing
 
 import (
 	"reflect"

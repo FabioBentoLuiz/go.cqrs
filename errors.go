@@ -1,4 +1,4 @@
-package ycq
+package eventsourcing
 
 import "fmt"
 
