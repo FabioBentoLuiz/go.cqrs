@@ -3,7 +3,7 @@ package example
 import "github.com/fabiobentoluiz/eventsourcing"
 
 type ProductionOrderRepository interface {
-	Load(string, string) (ProductionOrder, error)
+	Load(string, string) (*ProductionOrder, error)
 	Save(eventsourcing.AggregateRoot, *uint64) error
 }
 

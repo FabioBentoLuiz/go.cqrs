@@ -26,6 +26,9 @@ import (
 // have this convenience function and also allows for changing the scheme
 // used for the type name more easily if desired.
 func typeOf(i interface{}) string {
+	//fmt.Printf("%v\n", reflect.TypeOf(i))
+	//fmt.Printf("%T\n", i)
+	//it will panic if i is not a pointer
 	return reflect.TypeOf(i).Elem().Name()
 }
 

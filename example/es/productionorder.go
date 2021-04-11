@@ -30,7 +30,7 @@ func (order *ProductionOrder) Create(name string) error {
 		Name: name,
 	}
 
-	em := eventsourcing.NewEventMessage(order.AggregateID(), created, eventsourcing.Uint64(uint64(order.CurrentVersion())))
+	em := eventsourcing.NewEventMessage(order.AggregateID(), &created, eventsourcing.Uint64(uint64(order.CurrentVersion())))
 	order.Apply(em, true)
 
 	return nil
