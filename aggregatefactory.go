@@ -39,7 +39,7 @@ func NewDelegateAggregateFactory() *DelegateAggregateFactory {
 func (t *DelegateAggregateFactory) RegisterDelegate(aggregate AggregateRoot, delegate func(string) AggregateRoot) error {
 	typeName := typeOf(aggregate)
 	if _, ok := t.delegates[typeName]; ok {
-		return fmt.Errorf("Factory delegate already registered for type: \"%s\"", typeName)
+		return fmt.Errorf("factory delegate already registered for type: \"%s\"", typeName)
 	}
 	t.delegates[typeName] = delegate
 	return nil

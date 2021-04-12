@@ -8,6 +8,7 @@ package eventsourcing
 import . "gopkg.in/check.v1"
 
 var _ = Suite(&AggregateBaseSuite{})
+var initVer int64 = -1
 
 type AggregateBaseSuite struct{}
 
@@ -18,16 +19,16 @@ func (s *AggregateBaseSuite) TestNewAggregateBase(c *C) {
 
 	c.Assert(agg, NotNil)
 	c.Assert(agg.AggregateID(), Equals, id)
-	c.Assert(agg.OriginalVersion(), Equals, -1)
-	c.Assert(agg.CurrentVersion(), Equals, -1)
+	c.Assert(agg.OriginalVersion(), Equals, initVer)
+	c.Assert(agg.CurrentVersion(), Equals, initVer)
 }
 
 func (s *AggregateBaseSuite) TestIncrementVersion(c *C) {
 	agg := NewAggregateBase(NewUUID())
-	c.Assert(agg.CurrentVersion(), Equals, -1)
+	c.Assert(agg.CurrentVersion(), Equals, initVer)
 
 	agg.IncrementVersion()
-	c.Assert(agg.CurrentVersion(), Equals, 0)
+	c.Assert(agg.CurrentVersion(), Equals, int64(0))
 }
 
 func (s *AggregateBaseSuite) TestTrackOneChange(c *C) {

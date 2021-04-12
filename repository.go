@@ -39,11 +39,11 @@ type GetEventStoreCommonDomainRepo struct {
 // NewCommonDomainRepository constructs a new CommonDomainRepository
 func NewCommonDomainRepository(eventStore *esDb.Client, eventBus EventBus) (*GetEventStoreCommonDomainRepo, error) {
 	if eventStore == nil {
-		return nil, fmt.Errorf("Nil Eventstore injected into repository.")
+		return nil, fmt.Errorf("nil Eventstore injected into repository")
 	}
 
 	if eventBus == nil {
-		return nil, fmt.Errorf("Nil EventBus injected into repository.")
+		return nil, fmt.Errorf("nil EventBus injected into repository")
 	}
 
 	d := &GetEventStoreCommonDomainRepo{
@@ -84,20 +84,20 @@ func (r *GetEventStoreCommonDomainRepo) SetStreamNameDelegate(delegate StreamNam
 func (r *GetEventStoreCommonDomainRepo) Load(aggregateType, id string) (AggregateRoot, error) {
 
 	if r.aggregateFactory == nil {
-		return nil, fmt.Errorf("The common domain repository has no Aggregate Factory.")
+		return nil, fmt.Errorf("the common domain repository has no Aggregate Factory")
 	}
 
 	if r.streamNameDelegate == nil {
-		return nil, fmt.Errorf("The common domain repository has no stream name delegate.")
+		return nil, fmt.Errorf("the common domain repository has no stream name delegate")
 	}
 
 	if r.eventFactory == nil {
-		return nil, fmt.Errorf("The common domain has no Event Factory.")
+		return nil, fmt.Errorf("the common domain has no Event Factory")
 	}
 
 	aggregate := r.aggregateFactory.GetAggregate(aggregateType, id)
 	if aggregate == nil {
-		return nil, fmt.Errorf("The repository has no aggregate factory registered for aggregate type: %s", aggregateType)
+		return nil, fmt.Errorf("the repository has no aggregate factory registered for aggregate type: %s", aggregateType)
 	}
 
 	streamName, err := r.streamNameDelegate.GetStreamName(aggregateType, id)
@@ -107,7 +107,7 @@ func (r *GetEventStoreCommonDomainRepo) Load(aggregateType, id string) (Aggregat
 
 	events, err := r.eventStore.ReadStreamEvents(context.Background(), direction.Forwards, streamName, streamrevision.StreamRevisionStart, 1, false)
 	if err != nil {
-		return nil, fmt.Errorf("Could not read events from stream %s", streamName)
+		return nil, fmt.Errorf("could not read events from stream %s", streamName)
 	}
 
 	for _, event := range events {
@@ -124,7 +124,7 @@ func (r *GetEventStoreCommonDomainRepo) Load(aggregateType, id string) (Aggregat
 func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVersion *uint64) error {
 
 	if r.streamNameDelegate == nil {
-		return fmt.Errorf("The common domain repository has no stream name delagate.")
+		return fmt.Errorf("the common domain repository has no stream name delagate")
 	}
 
 	resultEvents := aggregate.GetChanges()
@@ -144,7 +144,7 @@ func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVe
 			//evs[k] = goes.NewEvent("", v.EventType(), v.Event(), v.GetHeaders())
 			eventID, err := uuid.NewV4()
 			if err != nil {
-				return fmt.Errorf("Could not generate UUID")
+				return fmt.Errorf("could not generate UUID")
 			}
 
 			json, err := json.Marshal(v.Event())
@@ -164,7 +164,7 @@ func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVe
 		_, err := r.eventStore.AppendToStream(context.Background(), streamName, streamrevision.StreamRevisionAny, events)
 
 		if err != nil {
-			return fmt.Errorf("Unexpected failure appending to stream %s. Error: %+v", streamName, err)
+			return fmt.Errorf("unexpected failure appending to stream %s. Error: %+v", streamName, err)
 		}
 	}
 

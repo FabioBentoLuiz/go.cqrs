@@ -44,13 +44,13 @@ func (s *InternalCommandBusSuite) TestShouldReturnErrorIfNoHandlerRegisteredForC
 
 	err := s.bus.Dispatch(cmd)
 
-	c.Assert(err, DeepEquals, fmt.Errorf("The command bus does not have a handler for commands of type: %s", cmd.CommandType()))
+	c.Assert(err, DeepEquals, fmt.Errorf("the command bus does not have a handler for commands of type: %s", cmd.CommandType()))
 	c.Assert(s.stubhandler.command, IsNil)
 }
 
 func (s *InternalCommandBusSuite) TestDuplicateHandlerRegistrationReturnsAnError(c *C) {
 	err := s.bus.RegisterHandler(s.stubhandler, &SomeCommand{}, &SomeCommand{})
-	c.Assert(err, DeepEquals, fmt.Errorf("Duplicate command handler registration with command bus for command of type: %s",
+	c.Assert(err, DeepEquals, fmt.Errorf("duplicate command handler registration with command bus for command of type: %s",
 		typeOf(&SomeCommand{"", 0})))
 }
 

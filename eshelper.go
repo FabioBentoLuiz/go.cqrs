@@ -15,6 +15,7 @@
 package eventsourcing
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/gofrs/uuid"
@@ -26,10 +27,12 @@ import (
 // have this convenience function and also allows for changing the scheme
 // used for the type name more easily if desired.
 func typeOf(i interface{}) string {
-	//fmt.Printf("%v\n", reflect.TypeOf(i))
-	//fmt.Printf("%T\n", i)
-	//it will panic if i is not a pointer
-	return reflect.TypeOf(i).Elem().Name()
+	t := reflect.TypeOf(i)
+	if t == nil {
+		panic(fmt.Sprintf("Type not found for: %T\n", i))
+	}
+
+	return t.Elem().Name()
 }
 
 // NewUUID returns a new v4 uuid as a string
@@ -41,9 +44,9 @@ func NewUUID() string {
 	return uuid.String()
 }
 
-// Int returns a pointer to int.
+// Uint64 returns a pointer to uint64.
 //
-// There are a number of places where a pointer to int
+// There are a number of places where a pointer to uint64
 // is required such as expectedVersion argument on the repository
 // and this helper function makes keeps the code cleaner in these
 // cases.

@@ -45,7 +45,7 @@ func (b *InMemoryDispatcher) Dispatch(command CommandMessage) error {
 	if handler, ok := b.handlers[command.CommandType()]; ok {
 		return handler.Handle(command)
 	}
-	return fmt.Errorf("The command bus does not have a handler for commands of type: %s", command.CommandType())
+	return fmt.Errorf("the command bus does not have a handler for commands of type: %s", command.CommandType())
 }
 
 //RegisterHandler registers a command handler for the command types specified by the
@@ -54,7 +54,7 @@ func (b *InMemoryDispatcher) RegisterHandler(handler CommandHandler, commands ..
 	for _, command := range commands {
 		typeName := typeOf(command)
 		if _, ok := b.handlers[typeName]; ok {
-			return fmt.Errorf("Duplicate command handler registration with command bus for command of type: %s", typeName)
+			return fmt.Errorf("duplicate command handler registration with command bus for command of type: %s", typeName)
 		}
 		b.handlers[typeName] = handler
 	}
