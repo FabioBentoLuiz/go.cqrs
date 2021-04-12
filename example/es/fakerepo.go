@@ -24,14 +24,14 @@ func (r *InMemoryRepo) Load(aggregateType string, id string) (*ProductionOrder, 
 		return nil, &eventsourcing.ErrAggregateNotFound{}
 	}
 
-	inventoryItem := NewProductionOrder(id)
+	order := NewProductionOrder(id)
 
 	for _, v := range events {
-		inventoryItem.Apply(v, false)
-		inventoryItem.IncrementVersion()
+		order.Apply(v, false)
+		order.IncrementVersion()
 	}
 
-	return inventoryItem, nil
+	return order, nil
 }
 
 // Save persists an aggregate.

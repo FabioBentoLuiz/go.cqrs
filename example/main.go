@@ -39,7 +39,7 @@ func init() {
 
 	// Create a dispatcher
 	dispatcher = eventsourcing.NewInMemoryDispatcher()
-	// Register the inventory command handlers instance as a command handler
+	// Register the production order command handlers instance as a command handler
 	// for the events specified.
 	err := dispatcher.RegisterHandler(productionOrderCommandHandler,
 		&example.CreateProductionOrder{})
@@ -53,7 +53,8 @@ func main() {
 	em := eventsourcing.NewCommandMessage(
 		id,
 		&example.CreateProductionOrder{
-			Name: "test-order",
+			Name:          "test-order",
+			BagsToProduce: 60,
 		})
 
 	err := dispatcher.Dispatch(em)

@@ -15,8 +15,9 @@ func NewReadModel() *ReadModel {
 
 // ProductionOrderListDto provides a lightweight lookup view of a production order
 type ProductionOrderListDto struct {
-	ID   string
-	Name string
+	ID            string
+	Name          string
+	BagsToProduce int
 }
 
 // FakeDatabase is a simple in memory repository
@@ -42,13 +43,13 @@ type ReadModelFacade interface {
 type ReadModel struct {
 }
 
-// GetProductionOrders returns a slice of all inventory items
+// GetProductionOrders returns a slice of all production orders items
 func (m *ReadModel) GetProductionOrders() []*ProductionOrderListDto {
 	return fakeDatabase.List
 }
 
-// ProductionOrderListView handles messages related to inventory and builds an
-// in memory read model of inventory item summaries in a list.
+// ProductionOrderListView handles messages related to orders and builds an
+// in memory read model of order summaries in a list.
 type ProductionOrderListView struct {
 }
 
@@ -61,7 +62,7 @@ func NewProductionOrderListView() *ProductionOrderListView {
 	return &ProductionOrderListView{}
 }
 
-// Handle processes events related to inventory and builds an in memory read model
+// Handle processes events related to order and builds an in memory read model
 func (v *ProductionOrderListView) Handle(message eventsourcing.EventMessage) {
 
 	switch event := message.Event().(type) {
@@ -69,8 +70,9 @@ func (v *ProductionOrderListView) Handle(message eventsourcing.EventMessage) {
 	case *ProductionOrderCreated:
 
 		fakeDatabase.List = append(fakeDatabase.List, &ProductionOrderListDto{
-			ID:   message.AggregateID(),
-			Name: event.Name,
+			ID:            message.AggregateID(),
+			Name:          event.Name,
+			BagsToProduce: event.BagsToProduce,
 		})
 
 		/*case *InventoryItemRenamed:

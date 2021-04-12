@@ -8,8 +8,8 @@ import (
 
 type ProductionOrder struct {
 	*eventsourcing.AggregateBase
-	bagsToProduce int
-	activated     bool
+	BagsToProduce int
+	Activated     bool
 }
 
 func NewProductionOrder(id string) *ProductionOrder {
@@ -22,12 +22,13 @@ func NewProductionOrder(id string) *ProductionOrder {
 
 func (order *ProductionOrder) Create(name string) error {
 	if name == "" {
-		return errors.New("The name cannot be empty")
+		return errors.New("the name cannot be empty")
 	}
 
 	created := ProductionOrderCreated{
-		ID:   order.AggregateID(),
-		Name: name,
+		ID:            order.AggregateID(),
+		Name:          name,
+		BagsToProduce: order.BagsToProduce,
 	}
 
 	em := eventsourcing.NewEventMessage(order.AggregateID(), &created, eventsourcing.Uint64(uint64(order.CurrentVersion())))
@@ -41,9 +42,9 @@ func (order *ProductionOrder) Apply(evtMessage eventsourcing.EventMessage, isNew
 		order.TrackChange(evtMessage)
 	}
 
-	switch evtMessage.Event().(type) {
+	switch e := evtMessage.Event().(type) {
 	case *ProductionOrderCreated:
-		order.activated = true
-
+		order.Activated = true
+		order.BagsToProduce = e.BagsToProduce
 	}
 }

@@ -1,6 +1,7 @@
 package example
 
 type ProductionOrderCreated struct {
-	ID   string
-	Name string
+	ID            string
+	Name          string
+	BagsToProduce int
 }

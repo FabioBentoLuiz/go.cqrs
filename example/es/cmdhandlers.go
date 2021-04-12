@@ -24,10 +24,19 @@ func (handler *ProductionOrderCommandHandler) Handle(cmdMessage eventsourcing.Co
 	switch cmd := cmdMessage.Command().(type) {
 	case *CreateProductionOrder:
 		order := NewProductionOrder(cmdMessage.AggregateID())
+		order.BagsToProduce = cmd.BagsToProduce
 		if err := order.Create(cmd.Name); err != nil {
 			return &eventsourcing.ErrCommandExecution{Command: cmdMessage, Reason: err.Error()}
 		}
 		return handler.repo.Save(order, eventsourcing.Uint64(uint64(order.OriginalVersion())))
+
+		// case *DeactivateInventoryItem:
+
+		// item, _ = h.repo.Load(reflect.TypeOf(&InventoryItem{}).Elem().Name(), message.AggregateID())
+		// if err := item.Deactivate(); err != nil {
+		// 	return &ycq.ErrCommandExecution{Command: message, Reason: err.Error()}
+		// }
+		// return h.repo.Save(item, ycq.Int(item.OriginalVersion()))
 	}
 
 	return nil

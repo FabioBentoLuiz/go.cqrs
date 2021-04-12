@@ -1,5 +1,6 @@
 package example
 
 type CreateProductionOrder struct {
-	Name string
+	Name          string
+	BagsToProduce int
 }
