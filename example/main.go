@@ -50,14 +50,14 @@ func init() {
 
 func main() {
 	id := eventsourcing.NewUUID()
-	em := eventsourcing.NewCommandMessage(
+	command := eventsourcing.NewCommandMessage(
 		id,
 		&example.CreateProductionOrder{
 			Name:          "test-order",
 			BagsToProduce: 60,
 		})
 
-	err := dispatcher.Dispatch(em)
+	err := dispatcher.Dispatch(command)
 	if err != nil {
 		log.Println(err)
 	}
