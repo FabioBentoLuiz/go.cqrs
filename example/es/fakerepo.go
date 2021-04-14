@@ -2,22 +2,24 @@ package example
 
 import "github.com/fabiobentoluiz/eventsourcing"
 
-// InMemoryRepo provides an in memory repository implementation.
-type InMemoryRepo struct {
+// ###### order
+
+// InMemoryOrderRepo provides an in memory repository implementation.
+type InMemoryOrderRepo struct {
 	current   map[string][]eventsourcing.EventMessage
 	publisher eventsourcing.EventBus
 }
 
 // NewInMemoryRepo constructs an InMemoryRepo instance.
-func NewInMemoryRepo(eventBus eventsourcing.EventBus) *InMemoryRepo {
-	return &InMemoryRepo{
+func NewInMemoryOrderRepo(eventBus eventsourcing.EventBus) *InMemoryOrderRepo {
+	return &InMemoryOrderRepo{
 		current:   make(map[string][]eventsourcing.EventMessage),
 		publisher: eventBus,
 	}
 }
 
 // Load loads an aggregate of the specified type.
-func (r *InMemoryRepo) Load(aggregateType string, id string) (*ProductionOrder, error) {
+func (r *InMemoryOrderRepo) Load(aggregateType string, id string) (*ProductionOrder, error) {
 
 	events, ok := r.current[id]
 	if !ok {
@@ -35,7 +37,7 @@ func (r *InMemoryRepo) Load(aggregateType string, id string) (*ProductionOrder, 
 }
 
 // Save persists an aggregate.
-func (r *InMemoryRepo) Save(aggregate eventsourcing.AggregateRoot, _ *uint64) error {
+func (r *InMemoryOrderRepo) Save(aggregate eventsourcing.AggregateRoot, _ *uint64) error {
 
 	//TODO: Look at the expected version
 	for _, v := range aggregate.GetChanges() {
@@ -44,5 +46,50 @@ func (r *InMemoryRepo) Save(aggregate eventsourcing.AggregateRoot, _ *uint64) er
 	}
 
 	return nil
+}
 
+// ####### repo
+
+// InMemoryPalletRepo provides an in memory repository implementation.
+type InMemoryPalletRepo struct {
+	current   map[string][]eventsourcing.EventMessage
+	publisher eventsourcing.EventBus
+}
+
+// NewInMemoryRepo constructs an InMemoryRepo instance.
+func NewInMemoryPalletRepo(eventBus eventsourcing.EventBus) *InMemoryPalletRepo {
+	return &InMemoryPalletRepo{
+		current:   make(map[string][]eventsourcing.EventMessage),
+		publisher: eventBus,
+	}
+}
+
+// Load loads an aggregate of the specified type.
+func (r *InMemoryPalletRepo) Load(aggregateType string, id string) (*Pallet, error) {
+
+	events, ok := r.current[id]
+	if !ok {
+		return nil, &eventsourcing.ErrAggregateNotFound{}
+	}
+
+	pallet := NewPallet(id)
+
+	for _, v := range events {
+		pallet.Apply(v, false)
+		pallet.IncrementVersion()
+	}
+
+	return pallet, nil
+}
+
+// Save persists an aggregate.
+func (r *InMemoryPalletRepo) Save(aggregate eventsourcing.AggregateRoot, _ *uint64) error {
+
+	//TODO: Look at the expected version
+	for _, v := range aggregate.GetChanges() {
+		r.current[aggregate.AggregateID()] = append(r.current[aggregate.AggregateID()], v)
+		r.publisher.PublishEvent(v)
+	}
+
+	return nil
 }

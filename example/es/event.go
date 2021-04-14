@@ -5,3 +5,9 @@ type ProductionOrderCreated struct {
 	Name          string
 	BagsToProduce int
 }
+
+type PalletCreated struct {
+	ID      string
+	Bags    int
+	OrderID string
+}

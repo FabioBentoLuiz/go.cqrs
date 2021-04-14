@@ -1,6 +1,10 @@
 package example
 
-import "github.com/fabiobentoluiz/eventsourcing"
+import (
+	"log"
+
+	"github.com/fabiobentoluiz/eventsourcing"
+)
 
 var fakeDatabase *FakeDatabase
 
@@ -18,24 +22,33 @@ type ProductionOrderListDto struct {
 	ID            string
 	Name          string
 	BagsToProduce int
+	Version       uint64
+}
+
+type PalletListDto struct {
+	ID      string
+	OrderID string
+	Bags    int
+	Version uint64
 }
 
 // FakeDatabase is a simple in memory repository
 type FakeDatabase struct {
-	//Details map[string]*InventoryItemDetailsDto
-	List []*ProductionOrderListDto
+	Pallets []*PalletListDto
+	Orders  []*ProductionOrderListDto
 }
 
 // NewFakeDatabase constructs a new FakeDatabase
 func NewFakeDatabase() *FakeDatabase {
 	return &FakeDatabase{
-		//Details: make(map[string]*InventoryItemDetailsDto),
+		Pallets: make([]*PalletListDto, 0),
 	}
 }
 
 // ReadModelFacade is an interface for the readmodel facade
 type ReadModelFacade interface {
 	GetProductionOrders() []*ProductionOrderListDto
+	GetPallets() []*PalletListDto
 }
 
 // ReadModel is an implementation of the ReadModelFacade interface.
@@ -43,14 +56,22 @@ type ReadModelFacade interface {
 type ReadModel struct {
 }
 
-// GetProductionOrders returns a slice of all production orders items
+// GetProductionOrders returns a slice of all production orders
 func (m *ReadModel) GetProductionOrders() []*ProductionOrderListDto {
-	return fakeDatabase.List
+	return fakeDatabase.Orders
+}
+
+// GetPallets returns a slice of all pallets
+func (m *ReadModel) GetPallets() []*PalletListDto {
+	return fakeDatabase.Pallets
 }
 
 // ProductionOrderListView handles messages related to orders and builds an
 // in memory read model of order summaries in a list.
 type ProductionOrderListView struct {
+}
+
+type PalletListView struct {
 }
 
 // NewProductionOrderListView constructs a new ProductionOrderListView
@@ -62,6 +83,15 @@ func NewProductionOrderListView() *ProductionOrderListView {
 	return &ProductionOrderListView{}
 }
 
+// NewPalletListView constructs a new PalletListView
+func NewPalletListView() *PalletListView {
+	if fakeDatabase == nil {
+		fakeDatabase = NewFakeDatabase()
+	}
+
+	return &PalletListView{}
+}
+
 // Handle processes events related to order and builds an in memory read model
 func (v *ProductionOrderListView) Handle(message eventsourcing.EventMessage) {
 
@@ -69,11 +99,15 @@ func (v *ProductionOrderListView) Handle(message eventsourcing.EventMessage) {
 
 	case *ProductionOrderCreated:
 
-		fakeDatabase.List = append(fakeDatabase.List, &ProductionOrderListDto{
+		fakeDatabase.Orders = append(fakeDatabase.Orders, &ProductionOrderListDto{
 			ID:            message.AggregateID(),
 			Name:          event.Name,
 			BagsToProduce: event.BagsToProduce,
+			Version:       0,
 		})
+
+	default:
+		log.Printf("there is no handler for the event %s", event)
 
 		/*case *InventoryItemRenamed:
 
@@ -99,5 +133,24 @@ func (v *ProductionOrderListView) Handle(message eventsourcing.EventMessage) {
 					bullShitDatabase.List[i+1:]...,
 				)
 			}*/
+	}
+}
+
+// Handle processes events related to pallets and builds an in memory read model
+func (v *PalletListView) Handle(message eventsourcing.EventMessage) {
+
+	switch event := message.Event().(type) {
+
+	case *PalletCreated:
+
+		fakeDatabase.Pallets = append(fakeDatabase.Pallets, &PalletListDto{
+			ID:      message.AggregateID(),
+			Bags:    event.Bags,
+			OrderID: event.OrderID,
+			Version: 0,
+		})
+
+	default:
+		log.Printf("there is no handler for the event %s", event)
 	}
 }
