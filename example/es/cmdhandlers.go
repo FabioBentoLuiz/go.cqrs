@@ -30,8 +30,7 @@ func (handler *ProductionOrderCommandHandler) Handle(cmdMessage eventsourcing.Co
 	switch cmd := cmdMessage.Command().(type) {
 	case *CreateProductionOrder:
 		order := NewProductionOrder(cmdMessage.AggregateID())
-		order.BagsToProduce = cmd.BagsToProduce
-		if err := order.Create(cmd.Name); err != nil {
+		if err := order.Create(cmd); err != nil {
 			return &eventsourcing.ErrCommandExecution{Command: cmdMessage, Reason: err.Error()}
 		}
 		return handler.repo.Save(order, eventsourcing.Int64(order.OriginalVersion()))

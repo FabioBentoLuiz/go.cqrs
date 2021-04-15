@@ -1,8 +1,6 @@
 package example
 
 import (
-	"errors"
-
 	"github.com/fabiobentoluiz/eventsourcing"
 )
 
@@ -20,15 +18,11 @@ func NewProductionOrder(id string) *ProductionOrder {
 	return &order
 }
 
-func (order *ProductionOrder) Create(name string) error {
-	if name == "" {
-		return errors.New("the name cannot be empty")
-	}
-
+func (order *ProductionOrder) Create(cmd *CreateProductionOrder) error {
 	created := ProductionOrderCreated{
 		ID:            order.AggregateID(),
-		Name:          name,
-		BagsToProduce: order.BagsToProduce,
+		Name:          cmd.Name,
+		BagsToProduce: cmd.BagsToProduce,
 	}
 
 	em := eventsourcing.NewEventMessage(order.AggregateID(), &created, eventsourcing.Int64(order.CurrentVersion()))
