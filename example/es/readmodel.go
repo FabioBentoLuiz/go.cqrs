@@ -22,14 +22,14 @@ type ProductionOrderListDto struct {
 	ID            string
 	Name          string
 	BagsToProduce int
-	Version       uint64
+	Version       int64
 }
 
 type PalletListDto struct {
 	ID      string
 	OrderID string
 	Bags    int
-	Version uint64
+	Version int64
 }
 
 // FakeDatabase is a simple in memory repository

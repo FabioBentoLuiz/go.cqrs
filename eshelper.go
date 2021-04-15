@@ -44,12 +44,12 @@ func NewUUID() string {
 	return uuid.String()
 }
 
-// Uint64 returns a pointer to uint64.
+// Int64 returns a pointer to int64.
 //
-// There are a number of places where a pointer to uint64
+// There are a number of places where a pointer to int64
 // is required such as expectedVersion argument on the repository
 // and this helper function makes keeps the code cleaner in these
 // cases.
-func Uint64(i uint64) *uint64 {
+func Int64(i int64) *int64 {
 	return &i
 }

@@ -23,7 +23,7 @@ type DomainRepository interface {
 	Load(aggregateTypeName string, aggregateID string) (AggregateRoot, error)
 
 	//Saves the aggregate.
-	Save(aggregate AggregateRoot, expectedVersion *uint64) error
+	Save(aggregate AggregateRoot, expectedVersion *int64) error
 }
 
 // GetEventStoreCommonDomainRepo is an implementation of the DomainRepository
@@ -111,7 +111,8 @@ func (r *GetEventStoreCommonDomainRepo) Load(aggregateType, id string) (Aggregat
 	}
 
 	for _, event := range events {
-		em := NewEventMessage(id, event, &event.EventNumber)
+		evtNum := int64(event.EventNumber)
+		em := NewEventMessage(id, event, &evtNum)
 		aggregate.Apply(em, false)
 		aggregate.IncrementVersion()
 	}
@@ -121,7 +122,7 @@ func (r *GetEventStoreCommonDomainRepo) Load(aggregateType, id string) (Aggregat
 }
 
 // Save persists an aggregate
-func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVersion *uint64) error {
+func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVersion *int64) error {
 
 	if r.streamNameDelegate == nil {
 		return fmt.Errorf("the common domain repository has no stream name delagate")
@@ -174,7 +175,7 @@ func (r *GetEventStoreCommonDomainRepo) Save(aggregate AggregateRoot, expectedVe
 		if expectedVersion == nil {
 			r.eventBus.PublishEvent(v)
 		} else {
-			ver := uint64(*expectedVersion + uint64(k) + 1)
+			ver := int64(*expectedVersion + int64(k) + 1)
 			em := NewEventMessage(v.AggregateID(), v.Event(), &ver)
 			r.eventBus.PublishEvent(em)
 		}

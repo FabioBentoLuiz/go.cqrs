@@ -10,7 +10,7 @@ import (
 
 type ProductionOrderRepository interface {
 	Load(string, string) (*ProductionOrder, error)
-	Save(eventsourcing.AggregateRoot, *uint64) error
+	Save(eventsourcing.AggregateRoot, *int64) error
 }
 
 type ProductionOrderCommandHandler struct {
@@ -34,7 +34,7 @@ func (handler *ProductionOrderCommandHandler) Handle(cmdMessage eventsourcing.Co
 		if err := order.Create(cmd.Name); err != nil {
 			return &eventsourcing.ErrCommandExecution{Command: cmdMessage, Reason: err.Error()}
 		}
-		return handler.repo.Save(order, eventsourcing.Uint64(uint64(order.OriginalVersion())))
+		return handler.repo.Save(order, eventsourcing.Int64(order.OriginalVersion()))
 
 		// case *DeactivateInventoryItem:
 
@@ -52,7 +52,7 @@ func (handler *ProductionOrderCommandHandler) Handle(cmdMessage eventsourcing.Co
 
 type PalletRepository interface {
 	Load(string, string) (*Pallet, error)
-	Save(eventsourcing.AggregateRoot, *uint64) error
+	Save(eventsourcing.AggregateRoot, *int64) error
 }
 
 type PalletCommandHandler struct {
@@ -75,7 +75,7 @@ func (handler *PalletCommandHandler) Handle(cmdMessage eventsourcing.CommandMess
 		if err := pallet.Create(cmd); err != nil {
 			return &eventsourcing.ErrCommandExecution{Command: cmdMessage, Reason: err.Error()}
 		}
-		return handler.repo.Save(pallet, eventsourcing.Uint64(uint64(pallet.OriginalVersion())))
+		return handler.repo.Save(pallet, eventsourcing.Int64(pallet.OriginalVersion()))
 
 	default:
 		log.Printf("there is no handler for the command %s", cmd)

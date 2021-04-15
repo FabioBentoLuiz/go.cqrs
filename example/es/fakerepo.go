@@ -37,7 +37,7 @@ func (r *InMemoryOrderRepo) Load(aggregateType string, id string) (*ProductionOr
 }
 
 // Save persists an aggregate.
-func (r *InMemoryOrderRepo) Save(aggregate eventsourcing.AggregateRoot, _ *uint64) error {
+func (r *InMemoryOrderRepo) Save(aggregate eventsourcing.AggregateRoot, _ *int64) error {
 
 	//TODO: Look at the expected version
 	for _, v := range aggregate.GetChanges() {
@@ -83,7 +83,7 @@ func (r *InMemoryPalletRepo) Load(aggregateType string, id string) (*Pallet, err
 }
 
 // Save persists an aggregate.
-func (r *InMemoryPalletRepo) Save(aggregate eventsourcing.AggregateRoot, _ *uint64) error {
+func (r *InMemoryPalletRepo) Save(aggregate eventsourcing.AggregateRoot, _ *int64) error {
 
 	//TODO: Look at the expected version
 	for _, v := range aggregate.GetChanges() {

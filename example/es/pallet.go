@@ -27,7 +27,7 @@ func (pallet *Pallet) Create(cmd *CreatePallet) error {
 		OrderID: cmd.OrderID,
 	}
 
-	em := eventsourcing.NewEventMessage(pallet.AggregateID(), &created, eventsourcing.Uint64(uint64(pallet.CurrentVersion())))
+	em := eventsourcing.NewEventMessage(pallet.AggregateID(), &created, eventsourcing.Int64(pallet.CurrentVersion()))
 	pallet.Apply(em, true)
 
 	return nil
