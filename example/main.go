@@ -4,8 +4,13 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/EventStore/EventStore-Client-Go/client"
 	"github.com/fabiobentoluiz/eventsourcing"
 	example "github.com/fabiobentoluiz/eventsourcing/example/es"
+)
+
+const (
+	eventStoreConnString = "esdb://admin:changeit@192.168.2.153:2113?tls=false"
 )
 
 var (
@@ -38,6 +43,15 @@ func init() {
 
 	// Here we use an in memory event repository.
 	orderRepo := example.NewInMemoryOrderRepo(eventBus)
+
+	// Here we use EventStoreDB with the EventStore-Client-Go client
+	// https://github.com/EventStore/EventStore-Client-Go/client
+	// Uncomment the following code and comment out the previous in memory repository
+	// client := newEventStoreDBClient()
+	// orderRepo, err := example.NewProductionOrderRepo(client, eventBus)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// Create an ProductionOrderCommandHandler instance
 	productionOrderCommandHandler := example.NewProductionOrderCommandHandler(orderRepo)
@@ -91,7 +105,7 @@ func createOneOrder(bags int) string {
 
 	err := dispatcher.Dispatch(command)
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	}
 
 	return id
@@ -117,4 +131,22 @@ func createPallets(orderId string, bags int) {
 			log.Println(err)
 		}
 	}
+}
+
+func newEventStoreDBClient() *client.Client {
+	config, err := client.ParseConnectionString(eventStoreConnString)
+	if err != nil {
+		log.Fatalf("EventStoreDB client configuration error: %s", err.Error())
+	}
+
+	c, err := client.NewClient(config)
+	if err != nil {
+		log.Fatalf("EventStoreDB client failed setting up the connection: %s", err.Error())
+	}
+	err = c.Connect()
+	if err != nil {
+		log.Fatalf("EventStoreDB client could not connect: %s", err.Error())
+	}
+
+	return c
 }

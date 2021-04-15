@@ -33,6 +33,7 @@ func (handler *ProductionOrderCommandHandler) Handle(cmdMessage eventsourcing.Co
 		if err := order.Create(cmd); err != nil {
 			return &eventsourcing.ErrCommandExecution{Command: cmdMessage, Reason: err.Error()}
 		}
+
 		return handler.repo.Save(order, eventsourcing.Int64(order.OriginalVersion()))
 
 		// case *DeactivateInventoryItem:
